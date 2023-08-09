@@ -1,0 +1,22 @@
+{
+  "name": "boost-telegram-bot",
+  "version": "Beta 1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start:dev": "nodemon index.js",
+    "start:prod": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.2",
+    "sequelize": "^6.32.1",
+    "telegraf": "^4.12.2"
+  }
+}
