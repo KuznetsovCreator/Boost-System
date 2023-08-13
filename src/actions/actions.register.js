@@ -36,6 +36,12 @@ const {
 const { helpScene } = require("./user/user.help");
 
 // ADMIN
+const { analyticScene } = require("./admin/admin.analytics");
+const {
+  adminCompletionScene,
+  adminCategoryCompletionScene,
+  adminCompletionDetailScene,
+} = require("./admin/admin.completions");
 
 // REG ACTIONS
 const stage = new Scenes.Stage();
@@ -45,23 +51,24 @@ stage.register(startScene);
 stage.register(authScene);
 stage.register(userScene);
 stage.register(adminScene);
+
 // User
+// Common actions
 stage.register(infoScene);
+stage.register(helpScene);
 stage.register(infoTaskScene);
 stage.register(infoPrizeScene);
-
+// Profile actions
 stage.register(profileScene);
 stage.register(profileCompletionScene);
 stage.register(profileRequestScene);
-
-stage.register(helpScene);
-
+// Prizes actions
 stage.register(prizeScene);
 stage.register(prizeCategoryScene);
 stage.register(prizeDetailScene);
 stage.register(prizeRequestScene);
 stage.register(prizeRequestCreateScene);
-
+// Tasks actions
 stage.register(taskScene);
 stage.register(taskCategoryScene);
 stage.register(taskDetailScene);
@@ -69,5 +76,13 @@ stage.register(taskCompletionScene);
 stage.register(taskCompletionCreateScene);
 stage.register(taskCompletionAddTextScene);
 stage.register(taskCompletionAddPhotoScene);
+
+// Admin
+// Common actions
+stage.register(analyticScene);
+// Completions actions
+stage.register(adminCompletionScene);
+stage.register(adminCategoryCompletionScene);
+stage.register(adminCompletionDetailScene);
 
 module.exports = stage;

@@ -4,7 +4,7 @@ const { DataTypes } = require("sequelize");
 // Users & Departments
 const User = sequelize.define("user", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  chatId: { type: DataTypes.INTEGER, allowNull: false, unique: true },
+  chatId: { type: DataTypes.BIGINT, allowNull: false, unique: true },
   fullName: { type: DataTypes.STRING, allowNull: false },
   balance: { type: DataTypes.INTEGER, defaultValue: 0, allowNull: true },
   contactPhone: { type: DataTypes.STRING, allowNull: true },

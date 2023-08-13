@@ -1,21 +1,8 @@
 const { Prize, PrizeRequest } = require("../database/db.models");
+const reply = require("../utils/text.util");
 
-// Prizes
-async function getPrize(id) {
-  try {
-    const prize = await Prize.findOne({
-      where: { id },
-    });
-
-    if (!prize) {
-      throw new Error("Prize with the specified ID not found.");
-    }
-
-    return prize;
-  } catch (error) {
-    throw new Error("Failed to get prize by the specified ID.");
-  }
-}
+// PRIZES
+// Create & Update
 async function createPrize(name, description, cost, category) {
   try {
     const prize = await Prize.create({
@@ -26,12 +13,12 @@ async function createPrize(name, description, cost, category) {
     });
     return prize;
   } catch (error) {
-    throw new Error("Failed to create prize.");
+    throw new Error("Ошибка создания приза.");
   }
 }
 async function updatePrize(id, name, description, cost, category) {
   try {
-    const [rowsUpdated, [updatedPrize]] = await Prize.update(
+    const updatedPrize = await Prize.update(
       {
         name,
         description,
@@ -43,26 +30,21 @@ async function updatePrize(id, name, description, cost, category) {
         returning: true,
       }
     );
-
-    if (rowsUpdated !== 1) {
-      throw new Error("Prize not found or update failed.");
-    }
-
     return updatedPrize;
   } catch (error) {
-    throw new Error("Failed to update prize.");
+    throw new Error("Ошибка обновления приза.");
   }
 }
-async function deletePrize(id) {
+
+// Read
+async function getPrize(id) {
   try {
-    const prize = await Prize.findOne(id);
-    if (!prize) {
-      throw new Error("Prize not found");
-    }
-    await prize.destroy();
+    const prize = await Prize.findOne({
+      where: { id },
+    });
     return prize;
   } catch (error) {
-    throw new Error("Failed to delete prize.");
+    throw new Error("Ошибка получения приза.");
   }
 }
 async function getAllPrizesByCategoryId(category) {
@@ -72,11 +54,40 @@ async function getAllPrizesByCategoryId(category) {
     });
     return prizes;
   } catch (error) {
-    throw new Error("Failed to get prizes by category.");
+    throw new Error("Ошибка получения призов по ID категории.");
   }
 }
 
-// PrizeRequests
+// PRIZE REQUESTS
+// Create & Update
+async function createRequest(status, userId, prizeId) {
+  try {
+    const prizeRequest = await PrizeRequest.create({
+      status,
+      userId,
+      prizeId,
+    });
+    return prizeRequest;
+  } catch (error) {
+    throw new Error("Ошибка создания заявки на приз.");
+  }
+}
+async function updateRequestStatus(id, newStatus) {
+  try {
+    const updatedPrizeRequest = await PrizeRequest.update(
+      { status: newStatus },
+      {
+        where: { id },
+        returning: true,
+      }
+    );
+    return updatedPrizeRequest;
+  } catch (error) {
+    throw new Error("Ошибка обновления заявки.");
+  }
+}
+
+// Read
 async function getRequest(id) {
   try {
     const prizeRequest = await PrizeRequest.findOne({ where: { id } });
@@ -87,7 +98,26 @@ async function getRequest(id) {
 
     return prizeRequest;
   } catch (error) {
-    throw new Error("Failed to get prize request by ID.");
+    throw new Error("Ошибка получения заявки.");
+  }
+}
+async function getRequestsCount() {
+  try {
+    const [totalRequests, checkRequests, approvedRequests, deniedRequests] =
+      await Promise.all([
+        PrizeRequest.count(),
+        PrizeRequest.count({ where: { status: reply.status.onCheck } }),
+        PrizeRequest.count({ where: { status: reply.status.onApproved } }),
+        PrizeRequest.count({ where: { status: reply.status.onDenied } }),
+      ]);
+    return {
+      totalRequests,
+      checkRequests,
+      approvedRequests,
+      deniedRequests,
+    };
+  } catch (error) {
+    throw new Error("Ошибка получения количества отчетов с параметрами.");
   }
 }
 async function getRequestsByUserID(userId) {
@@ -98,15 +128,7 @@ async function getRequestsByUserID(userId) {
     });
     return prizeRequests;
   } catch (error) {
-    throw new Error("Failed to get prize requests by user ID.");
-  }
-}
-async function getRequestsByPrizeID(prizeId) {
-  try {
-    const prizeRequests = await PrizeRequest.findAll({ where: { prizeId } });
-    return prizeRequests;
-  } catch (error) {
-    throw new Error("Failed to get prize requests by prize ID.");
+    throw new Error("Ошибка получения заявок пользователя.");
   }
 }
 async function getRequestByUserPrizeID(userId, prizeId) {
@@ -117,76 +139,21 @@ async function getRequestByUserPrizeID(userId, prizeId) {
     });
     return request;
   } catch (error) {
-    throw new Error("Failed to get prize request by user ID and prize ID.");
-  }
-}
-async function createRequest(status, userId, prizeId) {
-  try {
-    const prizeRequest = await PrizeRequest.create({
-      status,
-      userId,
-      prizeId,
-    });
-    return prizeRequest;
-  } catch (error) {
-    throw new Error("Failed to create prize request.");
-  }
-}
-async function updateRequestStatus(id, newStatus) {
-  try {
-    const [rowsUpdated, [updatedPrizeRequest]] = await PrizeRequest.update(
-      { status: newStatus },
-      {
-        where: { id },
-        returning: true,
-      }
+    throw new Error(
+      "Ошибка получения заявки пользователя по выбранному призу."
     );
-
-    if (rowsUpdated !== 1) {
-      throw new Error("Prize request not found or update failed.");
-    }
-
-    return updatedPrizeRequest;
-  } catch (error) {
-    throw new Error("Failed to update prize request status.");
-  }
-}
-async function deletePrizeRequest(id) {
-  try {
-    const deletedPrizeRequestCount = await PrizeRequest.destroy({
-      where: { id },
-    });
-
-    if (deletedPrizeRequestCount === 0) {
-      throw new Error("Prize request not found or deletion failed.");
-    }
-  } catch (error) {
-    throw new Error("Failed to delete prize request.");
-  }
-}
-async function getAllPrizeRequests() {
-  try {
-    const prizeRequests = await PrizeRequest.findAll();
-    return prizeRequests;
-  } catch (error) {
-    throw new Error("Failed to get all prize requests.");
   }
 }
 
 module.exports = {
-  // Prize
   getPrize,
   createPrize,
   updatePrize,
-  deletePrize,
   getAllPrizesByCategoryId,
-  // Requests
   getRequest,
   getRequestByUserPrizeID,
   getRequestsByUserID,
-  getRequestsByPrizeID,
   createRequest,
+  getRequestsCount,
   updateRequestStatus,
-  deletePrizeRequest,
-  getAllPrizeRequests,
 };

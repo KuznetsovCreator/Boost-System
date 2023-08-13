@@ -12,13 +12,14 @@ startScene.enter(async (ctx) => {
     return ctx.scene.enter("COMMON_AUTH_ACTION");
   }
 
-  // Create user object in session
-  ctx.session.user = user;
-
   // Check user role
-  return user.isAdmin
-    ? ctx.scene.enter("COMMON_ADMIN_ACTION")
-    : ctx.scene.enter("COMMON_USER_ACTION");
+  if (user.isAdmin) {
+    ctx.session.admin = user;
+    return ctx.scene.enter("COMMON_ADMIN_ACTION");
+  } else {
+    ctx.session.user = user;
+    return ctx.scene.enter("COMMON_USER_ACTION");
+  }
 });
 
 module.exports = { startScene };

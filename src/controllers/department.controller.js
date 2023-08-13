@@ -1,68 +1,57 @@
 const { Department } = require("../database/db.models");
 
-// Функция для создания нового отдела
+// Create & Update
 async function createDepartment(name) {
   try {
     const department = await Department.create({ name });
     return department;
   } catch (error) {
-    throw new Error("Failed to create department");
+    throw new Error("Ошибка создания отдела.");
   }
 }
-
-// Функция для получения всех отделов
-async function getAllDepartments() {
-  try {
-    const departments = await Department.findAll();
-    return departments;
-  } catch (error) {
-    throw new Error("Failed to fetch departments");
-  }
-}
-
-// Функция для получения отдела по его ID
-async function getDepartment(id) {
-  try {
-    const department = await Department.findByPk(id);
-    return department;
-  } catch (error) {
-    throw new Error("Failed to fetch department");
-  }
-}
-
-// Функция для обновления отдела
 async function updateDepartment(id, newName) {
   try {
     const department = await Department.findByPk(id);
     if (!department) {
-      throw new Error("Department not found");
+      throw new Error("Ошибка изменения отдела. Отдел не найден.");
     }
     department.name = newName;
     await department.save();
     return department;
   } catch (error) {
-    throw new Error("Failed to update department");
+    throw new Error("Ошибка обновления данных отдела.");
   }
 }
 
-// Функция для удаления отдела
-async function deleteDepartment(id) {
+// Read
+async function getDepartment(id) {
   try {
-    const department = await Department.findByPk(id);
-    if (!department) {
-      throw new Error("Department not found");
-    }
-    await department.destroy();
+    const department = await Department.findOne({ where: { id } });
     return department;
   } catch (error) {
-    throw new Error("Failed to delete department");
+    throw new Error("Ошибка получения отдела компании.");
+  }
+}
+async function getAllDepartments() {
+  try {
+    const departments = await Department.findAll();
+    return departments;
+  } catch (error) {
+    throw new Error("Ошибка получения всех отделов.");
+  }
+}
+async function getDepartmentsCount() {
+  try {
+    return await Department.count();
+  } catch (error) {
+    throw new Error("Ошибка получения кол-ва отделов компании.");
   }
 }
 
 module.exports = {
   createDepartment,
-  getAllDepartments,
   getDepartment,
+  getAllDepartments,
+  getDepartmentsCount,
   updateDepartment,
-  deleteDepartment,
 };

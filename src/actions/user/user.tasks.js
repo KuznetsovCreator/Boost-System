@@ -106,7 +106,7 @@ taskCategoryScene.enter(async (ctx) => {
       // Create text
       const title = reply.title.userTasks;
       const description =
-        "В данной категории нет доступных задач. Загляни попозже.";
+        "В данной категории нет доступных задач. Загляни попозже!";
       const answer = createHeader(title, description);
 
       // Create UI

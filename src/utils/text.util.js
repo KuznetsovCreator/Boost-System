@@ -8,11 +8,9 @@ const menu = {
   userSupport: "⛔ Поддержка ⛔",
 
   // Admin menu
-  adminAnalytics: "📈 Аналитика",
-  adminRequests: "Заявки 📥",
-  adminTasks: "🎯 Задачи",
-  adminPrizes: "Призы 🎁",
-  adminDepartments: "🏢 Отделы 🏢",
+  adminAnalytics: "📈 Аналитика 📉",
+  adminCompletions: "📤 Отчеты сотрудников 📥",
+  adminRequests: "🎁 Заявки на призы 🎁",
 };
 const title = {
   // User title
@@ -23,12 +21,9 @@ const title = {
   userSupport: "Поддержка ⛔",
 
   // Admin title
-  adminInfo: "Аналитика 📉",
-  adminUsers: "Управление сотрудниками 👦🏻",
-  adminDepartments: "Управление отделами 🏢",
-  adminTasks: "Управление задачами 🎯",
-  adminPrizes: "Управление призами 🏆",
-  adminRequests: "Управление заявками 📥",
+  adminAnalytics: "Аналитика 📉",
+  adminRequests: "Мастер заявок 🏆",
+  adminCompletions: "Мастер отчетов 📥",
 };
 const button = {
   back: "👈🏻 Назад",

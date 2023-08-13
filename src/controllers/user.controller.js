@@ -4,23 +4,22 @@ const {
   PrizeRequest,
   Department,
 } = require("../database/db.models");
+const { error } = require("../utils/text.util");
 
-// Функция для создания нового пользователя
-async function createUser(chatId, fullName, departmentId, isAdmin = false) {
+// Create & Update
+async function createUser(chatId, fullName, departmentId) {
   try {
     const user = await User.create({
       chatId,
       fullName,
+      isAdmin: false,
       departmentId,
-      isAdmin,
     });
     return user;
   } catch (error) {
-    throw new Error("Failed to create user.");
+    throw new Error("Ошибка создания нового пользователя.");
   }
 }
-
-// Функция для обновления информации о пользователе
 async function updateUser(userId, updateData) {
   try {
     const [rowsUpdated, [updatedUser]] = await User.update(updateData, {
@@ -38,29 +37,7 @@ async function updateUser(userId, updateData) {
   }
 }
 
-// Функция для вывода всех пользователей
-async function getAllUsers() {
-  try {
-    const users = await User.findAll();
-    return users;
-  } catch (error) {
-    throw new Error("Failed to get all users.");
-  }
-}
-
-// Функция для вывода всех пользователей в определенном отделе компании
-async function getUsersByDepartment(departmentId) {
-  try {
-    const users = await User.findAll({
-      where: { DepartmentId: departmentId },
-    });
-    return users;
-  } catch (error) {
-    throw new Error("Failed to get users by department.");
-  }
-}
-
-// Функция для вывода одного пользователя по ID чата
+// Read
 async function getUser(chatId) {
   try {
     const user = await User.findOne({
@@ -73,32 +50,37 @@ async function getUser(chatId) {
     });
     return user;
   } catch (error) {
-    throw new Error("Failed to get user by chat ID.");
+    throw new Error("Ошибка получения пользователя.");
+  }
+}
+async function getUsersCount() {
+  try {
+    return await User.count();
+  } catch (error) {
+    throw new Error("Ошибка получения кол-ва пользователей.");
   }
 }
 
-// Функция для пополнения баланса пользователя
-async function addBalance(userId, amount) {
+// User balance operations
+async function addBalance(id, amount) {
   try {
-    const user = await User.findOne(userId);
+    const user = await User.findOne({ where: { id } });
     if (!user) {
-      throw new Error("User not found.");
+      throw new Error("Не найден пользователь для пополнения баланса.");
     }
 
     user.balance += amount;
     await user.save();
     return user;
   } catch (error) {
-    throw new Error("Failed to increase user's balance.");
+    throw new Error("Ошибка пополнения баланса.");
   }
 }
-
-// Функция для уменьшения баланса пользователя
 async function removeBalance(chatId, amount) {
   try {
     const user = await User.findOne({ where: { chatId } });
     if (!user) {
-      throw new Error("User not found.");
+      throw new Error("Не найден пользователь для списания баланса.");
     }
 
     if (user.balance < amount) {
@@ -109,15 +91,14 @@ async function removeBalance(chatId, amount) {
     await user.save();
     return true;
   } catch (error) {
-    throw new Error("Failed to decrease user's balance.");
+    throw new Error("Ошибка списания баланса.");
   }
 }
 
 module.exports = {
   createUser,
   updateUser,
-  getAllUsers,
-  getUsersByDepartment,
+  getUsersCount,
   getUser,
   addBalance,
   removeBalance,

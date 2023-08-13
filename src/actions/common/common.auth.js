@@ -91,15 +91,15 @@ startThree.action(/select_department_(.+)/, async (ctx) => {
   const data = ["fullName", "departmentId"];
   if (handlerCheckData(ctx, data)) {
     // Get data
-    const chatID = ctx.chat.id;
-    const userFullName = ctx.session.fullName;
-    const userDepartmentID = ctx.session.departmentId;
+    const chatId = ctx.chat.id;
+    const fullName = ctx.session.fullName;
+    const departmentId = ctx.session.departmentId;
 
     // Clear session
     ctx.session = {};
 
     // Create new user
-    await createUser(chatID, userFullName, userDepartmentID);
+    await createUser(chatId, fullName, departmentId);
 
     // Go to next scene
     await ctx.deleteMessage(ctx.session.sceneMessages);

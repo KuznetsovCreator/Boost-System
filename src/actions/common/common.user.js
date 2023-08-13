@@ -42,10 +42,8 @@ userScene.enter(async (ctx) => {
   const description = reply.welcome.user;
   const answer = createHeader(title, description);
 
-  // Send
+  // Create message
   const message = await ctx.replyWithHTML(answer, mainMenu());
-
-  // Save messages ID + save scene step
   ctx.session.sceneMessages = message.message_id;
 });
 userScene.action(/(.+)/, async (ctx) => {
