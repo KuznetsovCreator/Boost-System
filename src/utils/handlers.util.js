@@ -1,7 +1,7 @@
 const reply = require("./text.util");
 const { createHeader, createBtn } = require("./ui.util");
 
-// Button handlers
+// Buttons action
 async function handlerGoToScene(
   ctx,
   sceneName,
@@ -20,6 +20,38 @@ async function handlerGoToScene(
   }
 }
 
+// Session data check
+function handlerCheckData(ctx, requiredData) {
+  const missingData = requiredData.filter((key) => {
+    const value = getValueByKeyPath(ctx.session, key);
+    return value === undefined || value === null;
+  });
+  if (missingData.length > 0) {
+    // Create text
+    const title = reply.error.data404title;
+    const description = reply.error.data404;
+    const answer = createHeader(title, description);
+    ctx.replyWithHTML(answer);
+    // Restart bot
+    ctx.scene.enter("COMMON_START_ACTION");
+    return false;
+  }
+  return true;
+}
+function getValueByKeyPath(obj, keyPath) {
+  const keys = keyPath.split(".");
+  let currentObj = obj;
+  for (const key of keys) {
+    if (currentObj && typeof currentObj === "object" && key in currentObj) {
+      currentObj = currentObj[key];
+    } else {
+      return undefined;
+    }
+  }
+  return currentObj;
+}
+
 module.exports = {
   handlerGoToScene,
+  handlerCheckData,
 };

@@ -159,6 +159,44 @@ async function updateCompletion(id, status) {
     throw new Error("Failed to update task completion status.");
   }
 }
+async function addTextReport(id, reportText) {
+  try {
+    const [rowsUpdated, [updatedTaskCompletion]] = await TaskCompletion.update(
+      { reportText },
+      {
+        where: { id },
+        returning: true,
+      }
+    );
+
+    if (rowsUpdated !== 1) {
+      throw new Error("Task completion not found or update failed.");
+    }
+
+    return updatedTaskCompletion;
+  } catch (error) {
+    throw new Error("Failed to update task completion status.");
+  }
+}
+async function addPhotoReport(id, reportPhoto) {
+  try {
+    const [rowsUpdated, [updatedTaskCompletion]] = await TaskCompletion.update(
+      { reportPhoto },
+      {
+        where: { id },
+        returning: true,
+      }
+    );
+
+    if (rowsUpdated !== 1) {
+      throw new Error("Task completion not found or update failed.");
+    }
+
+    return updatedTaskCompletion;
+  } catch (error) {
+    throw new Error("Failed to update task completion status.");
+  }
+}
 async function deleteCompletion(id) {
   try {
     const deletedTaskCompletionCount = await TaskCompletion.destroy({
@@ -185,5 +223,7 @@ module.exports = {
   getCompletionByUserTaskID,
   createCompletion,
   updateCompletion,
+  addTextReport,
+  addPhotoReport,
   deleteCompletion,
 };

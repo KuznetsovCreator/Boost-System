@@ -16,10 +16,8 @@ helpScene.enter(async (ctx) => {
   // Create UI
   const button = createBtn(reply.button.back, "COMMON_START_ACTION");
 
-  // Send
+  // Create message
   const message = await ctx.replyWithHTML(answer, button);
-
-  // Save messages ID
   ctx.session.sceneMessages = message.message_id;
 });
 

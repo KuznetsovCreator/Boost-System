@@ -25,6 +25,8 @@ const {
   taskDetailScene,
   taskCompletionScene,
   taskCompletionCreateScene,
+  taskCompletionAddTextScene,
+  taskCompletionAddPhotoScene,
 } = require("./user/user.tasks");
 const {
   profileScene,
@@ -35,8 +37,9 @@ const { helpScene } = require("./user/user.help");
 
 // ADMIN
 
-// REGISTRATE
+// REG ACTIONS
 const stage = new Scenes.Stage();
+
 // Common
 stage.register(startScene);
 stage.register(authScene);
@@ -64,6 +67,7 @@ stage.register(taskCategoryScene);
 stage.register(taskDetailScene);
 stage.register(taskCompletionScene);
 stage.register(taskCompletionCreateScene);
-// Admin
+stage.register(taskCompletionAddTextScene);
+stage.register(taskCompletionAddPhotoScene);
 
 module.exports = stage;

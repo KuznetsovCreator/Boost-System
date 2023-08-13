@@ -4,10 +4,14 @@ const {
   createBtn,
   createKeyboard,
 } = require("../../utils/ui.util");
-const { handlerGoToScene } = require("../../utils/handlers.util");
+const {
+  handlerGoToScene,
+  handlerCheckData,
+} = require("../../utils/handlers.util");
 const reply = require("../../utils/text.util");
 const { getUser } = require("../../controllers/user.controller");
 const { getRequestsByUserID } = require("../../controllers/prize.controller");
+const { getCompletionsByUserID } = require("../../controllers/task.controller");
 
 // Actions init
 const profileScene = new Scenes.BaseScene("USER_PROFILE_ACTION");
@@ -19,17 +23,14 @@ const profileRequestScene = new Scenes.BaseScene("PROFILE_REQUESTS_ACTION");
 // Output user data
 profileScene.enter(async (ctx) => {
   // Get user from session
-  const user = await getUser(ctx.session.user.chatId);
+  const chatID = ctx.chat.id;
+  const user = await getUser(chatID);
 
   // If user is undefined
   if (!user) {
     await ctx.scene.leave();
     return await ctx.scene.enter("COMMON_START_ACTION");
   }
-
-  // Create text
-  const title = reply.title.userProfile;
-  const departmentName = user.department ? user.department.name : "Не указан";
 
   // Tasks and prizes
   const taskCompletions = user.taskCompletions.filter(
@@ -39,8 +40,12 @@ profileScene.enter(async (ctx) => {
     (request) => request.status === reply.status.onApproved
   );
 
+  // Create text
+  const title = reply.title.userProfile;
   let description = `Сотрудник: ${user.fullName}\n`;
-  description += `Отдел: ${departmentName}\n\n`;
+  description += `Отдел: ${
+    user.department ? user.department.name : "Не выбран"
+  }\n\n`;
   description += `Баланс бустов: ${user.balance} 💸\n\n`;
   description += `Выполнено задач: ${taskCompletions.length} 🎯\n`;
   description += `Получено призов: ${prizeRequests.length} 🎁`;
@@ -63,72 +68,133 @@ profileScene.enter(async (ctx) => {
     },
   };
 
-  // Send
+  // Create message
   const message = await ctx.replyWithHTML(answer, keyboard);
-
-  // Save messages ID
   ctx.session.sceneMessages = message.message_id;
 });
 
 // Output user task completions
 profileCompletionScene.enter(async (ctx) => {
-  return ctx.reply("Скоро! Допиливаем :)");
-});
+  const data = ["user.id"];
+  if (handlerCheckData(ctx, data)) {
+    const userID = ctx.session.user.id;
+    const completions = await getCompletionsByUserID(userID);
 
-// Output user prize requests
-profileRequestScene.enter(async (ctx) => {
-  // Get data
-  const userID = ctx.session.user.id;
-  const requests = await getRequestsByUserID(userID);
+    // Check requests is empty
+    if (completions.length === 0) {
+      // Create text
+      const title = reply.actionTitles.userProfileTasks;
+      const description = reply.actionDescriptions.profileCompletionsNull;
+      const answer = createHeader(title, description);
 
-  // Check requests is empty
-  if (requests.length === 0) {
+      // Create UI
+      const keyboard = createKeyboard(
+        reply.button.back,
+        "USER_PROFILE_ACTION",
+        reply.button.mainMenu,
+        "COMMON_START_ACTION"
+      );
+
+      // Create message
+      const message = await ctx.replyWithHTML(answer, keyboard);
+      return (ctx.session.sceneMessages = message.message_id);
+    }
+
     // Create text
-    const title = reply.title.userProfilePrizes;
-    const description =
-      "Пока что тут пусто. Выполняй задачи, чтобы получать классные призы!";
+    const title = reply.actionTitles.userProfileTasks;
+    const description = reply.actionDescriptions.profileCompletions;
     const answer = createHeader(title, description);
 
     // Create UI
-    const keyboard = createKeyboard(
+    const backMenuButtons = createBtn(
       reply.button.back,
       "USER_PROFILE_ACTION",
       reply.button.mainMenu,
       "COMMON_START_ACTION"
     );
+    const keyboard = completions.map((completion) => {
+      return [
+        {
+          text: completion.task.name,
+          callback_data: `COMPLETION_TASK_ID_${completion.task.id}`,
+        },
+      ];
+    });
+    keyboard.push(backMenuButtons.reply_markup.inline_keyboard[0]);
 
     // Create message
-    const message = await ctx.replyWithHTML(answer, keyboard);
-    return (ctx.session.sceneMessages = message.message_id);
+    const message = await ctx.replyWithHTML(answer, {
+      reply_markup: { inline_keyboard: keyboard },
+    });
+    ctx.session.sceneMessages = message.message_id;
   }
-
-  // Create text
-  const title = reply.title.userProfilePrizes;
-  const description = "Выбери приз или заявку, чтобы узнать о ней подробнее.";
-  const answer = createHeader(title, description);
-
-  // Create UI
-  const backMenuButtons = createBtn(
-    reply.button.back,
-    "USER_PROFILE_ACTION",
-    reply.button.mainMenu,
-    "COMMON_START_ACTION"
+});
+profileCompletionScene.action(/COMPLETION_TASK_ID_(.+)/, async (ctx) => {
+  const taskID = ctx.match[1];
+  ctx.session.taskID = taskID.trim();
+  handlerGoToScene(
+    ctx,
+    "TASK_COMPLETION_ACTION",
+    reply.error.scene404title,
+    reply.error.scene404
   );
-  const keyboard = requests.map((request) => {
-    return [
-      {
-        text: request.prize.name,
-        callback_data: `REQUEST_PRIZE_ID_${request.prize.id}`,
-      },
-    ];
-  });
-  keyboard.push(backMenuButtons.reply_markup.inline_keyboard[0]);
+});
 
-  // Create message
-  const message = await ctx.replyWithHTML(answer, {
-    reply_markup: { inline_keyboard: keyboard },
-  });
-  ctx.session.sceneMessages = message.message_id;
+// Output user prize requests
+profileRequestScene.enter(async (ctx) => {
+  const data = ["user.id"];
+  if (handlerCheckData(ctx, data)) {
+    const userID = ctx.session.user.id;
+    const requests = await getRequestsByUserID(userID);
+
+    // Check requests is empty
+    if (requests.length === 0) {
+      // Create text
+      const title = reply.actionTitles.userProfilePrizes;
+      const description = reply.actionDescriptions.profileRequestsNull;
+      const answer = createHeader(title, description);
+
+      // Create UI
+      const keyboard = createKeyboard(
+        reply.button.back,
+        "USER_PROFILE_ACTION",
+        reply.button.mainMenu,
+        "COMMON_START_ACTION"
+      );
+
+      // Create message
+      const message = await ctx.replyWithHTML(answer, keyboard);
+      return (ctx.session.sceneMessages = message.message_id);
+    }
+
+    // Create text
+    const title = reply.actionTitles.userProfilePrizes;
+    const description = reply.actionDescriptions.profileRequests;
+    const answer = createHeader(title, description);
+
+    // Create UI
+    const backMenuButtons = createBtn(
+      reply.button.back,
+      "USER_PROFILE_ACTION",
+      reply.button.mainMenu,
+      "COMMON_START_ACTION"
+    );
+    const keyboard = requests.map((request) => {
+      return [
+        {
+          text: request.prize.name,
+          callback_data: `REQUEST_PRIZE_ID_${request.prize.id}`,
+        },
+      ];
+    });
+    keyboard.push(backMenuButtons.reply_markup.inline_keyboard[0]);
+
+    // Create message
+    const message = await ctx.replyWithHTML(answer, {
+      reply_markup: { inline_keyboard: keyboard },
+    });
+    ctx.session.sceneMessages = message.message_id;
+  }
 });
 profileRequestScene.action(/REQUEST_PRIZE_ID_(.+)/, async (ctx) => {
   const prizeID = ctx.match[1];

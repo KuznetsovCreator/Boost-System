@@ -32,7 +32,7 @@ infoScene.enter(async (ctx) => {
         ],
         [
           {
-            text: "🏆 Подробнее о призах 🏆",
+            text: "🎁 Подробнее о призах 🎁",
             callback_data: "INFO_PRIZE_ACTION",
           },
         ],
@@ -41,17 +41,17 @@ infoScene.enter(async (ctx) => {
     },
   };
 
-  // Send
+  // Create message
   const message = await ctx.replyWithHTML(answer, keyboard);
-
-  // Save messages ID
   ctx.session.sceneMessages = message.message_id;
 });
 infoTaskScene.enter(async (ctx) => {
-  // Create text + UI
-  const title = reply.title.userInfoTasks;
+  // Create text
+  const title = reply.actionTitles.userInfoTasks;
   const description = reply.info.tasks;
   const answer = createHeader(title, description);
+
+  // Create UI
   const keyboard = createKeyboard(
     reply.button.back,
     "USER_INFO_ACTION",
@@ -59,17 +59,17 @@ infoTaskScene.enter(async (ctx) => {
     "COMMON_START_ACTION"
   );
 
-  // Send
+  // Create message
   const message = await ctx.replyWithHTML(answer, keyboard);
-
-  // Save messages ID
   ctx.session.sceneMessages = message.message_id;
 });
 infoPrizeScene.enter(async (ctx) => {
-  // Create text + UI
-  const title = reply.title.userInfoPrizes;
+  // Create text
+  const title = reply.actionTitles.userInfoPrizes;
   const description = reply.info.prizes;
   const answer = createHeader(title, description);
+
+  // Create UI
   const keyboard = createKeyboard(
     reply.button.back,
     "USER_INFO_ACTION",
@@ -77,10 +77,8 @@ infoPrizeScene.enter(async (ctx) => {
     "COMMON_START_ACTION"
   );
 
-  // Send
+  // Create message
   const message = await ctx.replyWithHTML(answer, keyboard);
-
-  // Save messages ID
   ctx.session.sceneMessages = message.message_id;
 });
 

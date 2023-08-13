@@ -68,10 +68,20 @@ const hasCensorship = (text) => {
   return forbiddenWords.some((word) => lowercaseText.includes(word));
 };
 
+// Length validation
+const isMinLengthValid = (text, minLength) => {
+  return text.length >= minLength;
+};
+const isMaxLengthValid = (text, maxLength) => {
+  return text.length <= maxLength;
+};
+
 module.exports = {
   validateText,
   hasTwoWords,
   isValidEmail,
   isValidPhoneNumber,
   hasCensorship,
+  isMinLengthValid,
+  isMaxLengthValid,
 };

@@ -5,6 +5,7 @@ const {
 } = require("../../controllers/department.controller");
 const reply = require("../../utils/text.util");
 const { createBtn, createHeader } = require("../../utils/ui.util");
+const { handlerCheckData } = require("../../utils/handlers.util");
 const validation = require("../../utils/validation.util");
 
 // Functions
@@ -43,16 +44,17 @@ const startThree = new Composer();
 
 // Action steps
 stepOne.action("getName", async (ctx) => {
+  // Delete old message
   await ctx.deleteMessage(ctx.session.sceneMessages);
 
-  const title = "Как тебя зовут? 😁";
-  const description =
-    "Напиши <i>фамилию</i> и <i>имя</i> через пробел. Например: <i>Кузнецов Илья</i>.";
-  const answer = createHeader(title, description, false);
+  // Create text
+  const title = reply.actionTitles.auth;
+  const description = reply.actionDescriptions.auth;
+  const answer = createHeader(title, description);
 
+  // Create message
   const message = await ctx.replyWithHTML(answer);
   ctx.session.sceneMessages = message.message_id;
-
   return ctx.wizard.next();
 });
 stepTwo.on("text", async (ctx) => {
@@ -73,24 +75,37 @@ stepTwo.on("text", async (ctx) => {
     );
   }
 
-  // Send
-  await showDepartments(ctx);
+  // Set data
   ctx.session.fullName = fullName;
 
+  // Create message
+  await showDepartments(ctx);
   return ctx.wizard.next();
 });
 startThree.action(/select_department_(.+)/, async (ctx) => {
+  // Get & Set
   const departmentId = ctx.match[1];
+  ctx.session.departmentId = departmentId.trim();
 
-  // Create new user
-  await createUser(ctx.chat.id, ctx.session.fullName, departmentId);
+  // Check data
+  const data = ["fullName", "departmentId"];
+  if (handlerCheckData(ctx, data)) {
+    // Get data
+    const chatID = ctx.chat.id;
+    const userFullName = ctx.session.fullName;
+    const userDepartmentID = ctx.session.departmentId;
 
-  // Delete old message
-  await ctx.deleteMessage(ctx.session.sceneMessages);
+    // Clear session
+    ctx.session = {};
 
-  // Go to next scene
-  await ctx.scene.leave();
-  return ctx.scene.enter("COMMON_START_ACTION");
+    // Create new user
+    await createUser(chatID, userFullName, userDepartmentID);
+
+    // Go to next scene
+    await ctx.deleteMessage(ctx.session.sceneMessages);
+    await ctx.scene.leave();
+    return ctx.scene.enter("COMMON_START_ACTION");
+  }
 });
 
 // Create action
@@ -101,10 +116,12 @@ const authScene = new Scenes.WizardScene(
   startThree
 );
 authScene.enter(async (ctx) => {
+  // Create text & UI
   const answer = reply.welcome.newUser;
-  const keyboard = createBtn("Давай знакомиться 🔥", "getName");
+  const button = createBtn("Давай знакомиться 🔥", "getName");
 
-  const message = await ctx.replyWithHTML(answer, keyboard);
+  // Create message
+  const message = await ctx.replyWithHTML(answer, button);
   ctx.session.sceneMessages = message.message_id;
 });
 
