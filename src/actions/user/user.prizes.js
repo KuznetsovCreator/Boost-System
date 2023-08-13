@@ -128,18 +128,15 @@ prizeCategoryScene.enter(async (ctx) => {
   }
 });
 prizeCategoryScene.action(/PRIZE_(.+)/, (ctx) => {
-  const data = ["prizeID"];
-  if (handlerCheckData(ctx, data)) {
-    const prizeID = ctx.match[1];
-    ctx.session.prizeID = prizeID.trim();
+  const prizeID = ctx.match[1];
+  ctx.session.prizeID = prizeID.trim();
 
-    handlerGoToScene(
-      ctx,
-      "PRIZE_DETAIL_ACTION",
-      reply.error.scene404title,
-      reply.error.scene404
-    );
-  }
+  handlerGoToScene(
+    ctx,
+    "PRIZE_DETAIL_ACTION",
+    reply.error.scene404title,
+    reply.error.scene404
+  );
 });
 
 // Output prize detail
@@ -149,25 +146,6 @@ prizeDetailScene.enter(async (ctx) => {
     // Get prize ID
     const prizeID = ctx.session.prizeID;
     const prize = await getPrize(prizeID);
-
-    // Check prize is empty
-    if (!prize) {
-      const title = "Упсс... Ошибка получения приза 😥";
-      const description = reply.error.default;
-      const answer = createHeader(title, description);
-
-      // Create UI
-      const keyboard = createKeyboard(
-        reply.button.back,
-        "PRIZE_CATEGORY_ACTION",
-        reply.button.mainMenu,
-        "COMMON_START_ACTION"
-      );
-
-      // Create message
-      const message = await ctx.replyWithHTML(answer, keyboard);
-      return (ctx.session.sceneMessages = message.message_id);
-    }
 
     // Create text
     let description = `${prize.description}\n\n`;
