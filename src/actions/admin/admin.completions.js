@@ -201,10 +201,8 @@ adminCompletionDetailScene.enter(async (ctx) => {
       ctx.session.completionPhotoPath = completion.reportPhoto;
       keyboard = {
         reply_markup: {
-          inline_keyboard: [
-            ...lookPhotoButton.reply_markup.inline_keyboard,
-            keyboardButtons,
-          ],
+          inline_keyboard: [...lookPhotoButton.reply_markup.inline_keyboard],
+          keyboardButtons,
         },
       };
     }
