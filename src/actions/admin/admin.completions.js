@@ -147,11 +147,11 @@ adminCompletionDetailScene.enter(async (ctx) => {
 
     // Create text
     const title = `Отчет №: ${completion.id}`;
-    const textReport = "Не прикреплен";
+    let textReport = "Не прикреплен";
     if (completion.reportText) {
       textReport = completion.reportText;
     }
-    const photoReport = "Не прикреплен";
+    let photoReport = "Не прикреплен";
     if (completion.reportPhoto) {
       photoReport = "Прикреплен";
     }
