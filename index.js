@@ -26,18 +26,10 @@ async function start() {
 async function restart(ctx) {
   try {
     ctx.session = {};
-    await bot.stop();
-
-    const newBot = new Telegraf(process.env.BOT_TOKEN);
-    newBot.use(session());
-
-    bot = newBot;
-
-    await start();
-    ctx.reply(
-      "Бустик перезапустился. Используйте команду /start, чтобы начать."
+    await ctx.scene.enter("COMMON_START_ACTION");
+    console.log(
+      `Бот перезапущен для пользователя ${ctx.from.id}. Версия: ${version}`
     );
-    console.log(`Бот "${name}" перезапущен. Версия: ${version}`);
   } catch (error) {
     console.error("Ошибка команды /restart", error);
   }
@@ -45,3 +37,5 @@ async function restart(ctx) {
 
 // Start
 start();
+
+module.exports = { bot };

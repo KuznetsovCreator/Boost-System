@@ -15,7 +15,11 @@ const {
   getRequestByUserPrizeID,
   createRequest,
 } = require("../../controllers/prize.controller");
-const { removeBalance } = require("../../controllers/user.controller");
+const {
+  removeBalance,
+  getAdmins,
+} = require("../../controllers/user.controller");
+const { bot } = require("../../../index");
 
 // Actions init
 const prizeScene = new Scenes.BaseScene("USER_PRIZES_ACTION");
@@ -240,7 +244,7 @@ prizeRequestScene.enter(async (ctx) => {
 
 // Create prize request
 prizeRequestCreateScene.enter(async (ctx) => {
-  const data = ["prizeID"];
+  const data = ["user.id", "prizeID"];
   if (handlerCheckData(ctx, data)) {
     // Get prize data
     const prizeID = ctx.session.prizeID;
@@ -285,6 +289,28 @@ prizeRequestCreateScene.enter(async (ctx) => {
       ctx.session.user.id,
       prizeID
     );
+
+    if (newRequest) {
+      const admins = await getAdmins();
+      if (admins.length > 0) {
+        for (const admin of admins) {
+          try {
+            const title = "Создана новая заявка 🎁";
+            const description = `Сотрудник ${ctx.session.user.fullName} подал заявку на получение приза.`;
+            const answer = createHeader(title, description);
+            await ctx.telegram.sendMessage(admin.chatId, answer, {
+              parse_mode: "HTML",
+            });
+          } catch (error) {
+            console.error(
+              `Ошибка при отправке сообщения администратору с chat_id ${admin.chatId}`,
+              error
+            );
+          }
+        }
+      }
+    }
+
     ctx.session.prizeID = newRequest.prizeId;
     return ctx.scene.enter("PRIZE_REQUEST_ACTION");
   }

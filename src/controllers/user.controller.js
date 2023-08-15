@@ -53,6 +53,14 @@ async function getUser(chatId) {
     throw new Error("Ошибка получения пользователя.");
   }
 }
+async function getAdmins() {
+  try {
+    const user = await User.findAll({ where: { isAdmin: true } });
+    return user;
+  } catch (error) {
+    throw new Error("Ошибка получения пользователя.");
+  }
+}
 async function getUsersCount() {
   try {
     return await User.count();
@@ -102,4 +110,5 @@ module.exports = {
   getUser,
   addBalance,
   removeBalance,
+  getAdmins,
 };

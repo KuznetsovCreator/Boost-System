@@ -1,4 +1,4 @@
-const { Prize, PrizeRequest } = require("../database/db.models");
+const { Prize, PrizeRequest, User } = require("../database/db.models");
 const reply = require("../utils/text.util");
 
 // PRIZES
@@ -90,12 +90,10 @@ async function updateRequestStatus(id, newStatus) {
 // Read
 async function getRequest(id) {
   try {
-    const prizeRequest = await PrizeRequest.findOne({ where: { id } });
-
-    if (!prizeRequest) {
-      throw new Error("Prize request with the specified ID not found.");
-    }
-
+    const prizeRequest = await PrizeRequest.findOne({
+      where: { id },
+      include: [{ model: Prize }, { model: User }],
+    });
     return prizeRequest;
   } catch (error) {
     throw new Error("Ошибка получения заявки.");
@@ -118,6 +116,17 @@ async function getRequestsCount() {
     };
   } catch (error) {
     throw new Error("Ошибка получения количества отчетов с параметрами.");
+  }
+}
+async function getRequestsByStatus(status) {
+  try {
+    const requests = await PrizeRequest.findAll({
+      where: { status },
+      include: [{ model: Prize }, { model: User }],
+    });
+    return requests;
+  } catch (error) {
+    throw new Error("Ошибка получения заявок на призы по статусу.");
   }
 }
 async function getRequestsByUserID(userId) {
@@ -156,4 +165,5 @@ module.exports = {
   createRequest,
   getRequestsCount,
   updateRequestStatus,
+  getRequestsByStatus,
 };

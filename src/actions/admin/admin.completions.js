@@ -147,25 +147,26 @@ adminCompletionDetailScene.enter(async (ctx) => {
 
     // Create text
     const title = `Отчет №: ${completion.id}`;
-    let description = `Сотрудник: ${completion.user.fullName}\n`;
-    description += `Отдел: ${department.name}\n\n`;
-    description += `Задача: ${completion.task.name}\n`;
-    description += `Стоимость: ${completion.task.cost} 💸\n\n`;
-    description += `Статус: ${completion.status}\n\n`;
-    if (!completion.reportText) {
-      description += `Текстовый отчет: Не прикреплен`;
-    } else {
-      description += `Текстовый отчет: "${completion.reportText}"`;
+    const textReport = "Не прикреплен";
+    if (completion.reportText) {
+      textReport = completion.reportText;
     }
+    const photoReport = "Не прикреплен";
+    if (completion.reportPhoto) {
+      photoReport = "Прикреплен";
+    }
+    let description = `<b>Исполнитель:</b>\n`;
+    description += `${completion.user.fullName} из отдела "${department.name}"\n\n`;
+    description += `<b>Задача:</b>\n`;
+    description += `Название: "${completion.task.name}"\n`;
+    description += `Стоимость: ${completion.task.cost} 💸\n`;
+    description += `Статус: ${completion.status}\n\n`;
+    description += `<b>Содержание отчета</b>:\n`;
+    description += `Фото-отчет: ${photoReport}\n`;
+    description += `Текстовый отчет: ${textReport}\n`;
     const answer = createHeader(title, description);
 
     // Create UI
-    const backMenuButtons = createKeyboard(
-      reply.button.back,
-      "COMPLETION_CATEGORY_ACTION",
-      reply.button.mainMenu,
-      "COMMON_START_ACTION"
-    );
     const lookPhotoButton = createBtn("Смотреть фото", "COMPLETION_PHOTO");
     const eventButtons = createKeyboard(
       "Засчитать",
@@ -173,24 +174,36 @@ adminCompletionDetailScene.enter(async (ctx) => {
       "Отклонить",
       "COMPLETION_DENIED"
     );
-    let keyboard;
-    if (!completion.reportPhoto) {
-      keyboard = {
-        reply_markup: {
-          inline_keyboard: [
-            ...eventButtons.reply_markup.inline_keyboard,
-            ...backMenuButtons.reply_markup.inline_keyboard,
-          ],
-        },
-      };
-    } else {
+    const backMenuButtons = createKeyboard(
+      reply.button.back,
+      "ADMIN_COMPLETIONS_ACTION",
+      reply.button.mainMenu,
+      "COMMON_START_ACTION"
+    );
+
+    let keyboardButtons = [
+      ...eventButtons.reply_markup.inline_keyboard,
+      ...backMenuButtons.reply_markup.inline_keyboard,
+    ];
+    if (
+      completion.status === reply.status.onApproved ||
+      completion.status === reply.status.onDenied
+    ) {
+      keyboardButtons = [...backMenuButtons.reply_markup.inline_keyboard];
+    }
+
+    let keyboard = {
+      reply_markup: {
+        inline_keyboard: keyboardButtons,
+      },
+    };
+    if (completion.reportPhoto) {
       ctx.session.completionPhotoPath = completion.reportPhoto;
       keyboard = {
         reply_markup: {
           inline_keyboard: [
             ...lookPhotoButton.reply_markup.inline_keyboard,
-            ...eventButtons.reply_markup.inline_keyboard,
-            ...backMenuButtons.reply_markup.inline_keyboard,
+            keyboardButtons,
           ],
         },
       };
@@ -236,6 +249,26 @@ adminCompletionDetailScene.action("COMPLETION_APPROVED", async (ctx) => {
     await updateCompletionStatus(completion.id, reply.status.onApproved);
     await addBalance(completion.userId, completion.task.cost);
 
+    // Create text
+    const title = "Мы рассмотрели твой отчет 📝";
+    const description = `Отчет по задаче "${completion.task.name}" одобрен.\nТы заработал ${completion.task.cost} 💸 бустов.`;
+    const answer = createHeader(title, description);
+
+    try {
+      await ctx.telegram.sendMessage(completion.user.chatId, answer, {
+        parse_mode: "HTML",
+      });
+    } catch (error) {
+      console.error(
+        `Ошибка при отправке сообщения сотруднику об одобрении отчета по задаче с chat_id ${request.userId}`,
+        error
+      );
+      const title = reply.error.defaultTitle;
+      const description = reply.error.default;
+      const answer = createHeader(title, description);
+      return ctx.replyWithHTML(answer);
+    }
+
     handlerGoToScene(
       ctx,
       "COMPLETION_DETAIL_ACTION",
@@ -248,8 +281,29 @@ adminCompletionDetailScene.action("COMPLETION_DENIED", async (ctx) => {
   const data = ["completion"];
   if (handlerCheckData(ctx, data)) {
     // Get data
-    const completion = ctx.session.completion.id;
+    const completion = ctx.session.completion;
     await updateCompletionStatus(completion.id, reply.status.onDenied);
+
+    // Create text
+    const title = "Мы рассмотрели твой отчет 📝";
+    const description = `Отчет по задаче "${completion.task.name}" отклонен.\nДля уточнения деталей свяжись с <b>@lubowchanell</b>`;
+    const answer = createHeader(title, description);
+
+    try {
+      await ctx.telegram.sendMessage(completion.user.chatId, answer, {
+        parse_mode: "HTML",
+      });
+    } catch (error) {
+      console.error(
+        `Ошибка при отправке сообщения сотруднику об одобрении отчета по задаче с chat_id ${request.userId}`,
+        error
+      );
+      const title = reply.error.defaultTitle;
+      const description = reply.error.default;
+      const answer = createHeader(title, description);
+      return ctx.replyWithHTML(answer);
+    }
+
     handlerGoToScene(
       ctx,
       "COMPLETION_DETAIL_ACTION",

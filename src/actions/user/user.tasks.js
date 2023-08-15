@@ -1,7 +1,7 @@
 require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
-const { Scenes, InputFile } = require("telegraf");
+const { Scenes } = require("telegraf");
 const {
   createHeader,
   createBtn,
@@ -21,6 +21,7 @@ const {
   addTextReport,
   addPhotoReport,
 } = require("../../controllers/task.controller");
+const { getAdmins } = require("../../controllers/user.controller");
 const validation = require("../../utils/validation.util");
 
 // Actions init
@@ -305,31 +306,31 @@ taskCompletionScene.enter(async (ctx) => {
 taskCompletionCreateScene.enter(async (ctx) => {
   const data = ["user.id", "taskID"];
   if (handlerCheckData(ctx, data)) {
-    // Get task data
     const userID = ctx.session.user.id;
     const taskID = ctx.session.taskID;
 
     const completionStatus = reply.status.onCheck;
     const completion = await createCompletion(userID, taskID, completionStatus);
 
-    if (!completion) {
-      // Create text
-      const title = "К сожалению... 😥";
-      const description =
-        "Невозможно создать отчет по задаче. Повтори попытку позже.";
-      const answer = createHeader(title, description);
-
-      // Create UI
-      const keyboard = createKeyboard(
-        reply.button.back,
-        "TASK_DETAIL_ACTION",
-        reply.button.mainMenu,
-        "COMMON_START_ACTION"
-      );
-
-      // Create message
-      const message = await ctx.replyWithHTML(answer, keyboard);
-      return (ctx.session.sceneMessages = message.message_id);
+    if (completion) {
+      const admins = await getAdmins();
+      if (admins.length > 0) {
+        for (const admin of admins) {
+          try {
+            const title = "Создан новый отчет 📝";
+            const description = `Сотрудник ${ctx.session.user.fullName} начал выполнение задачи.`;
+            const answer = createHeader(title, description);
+            await ctx.telegram.sendMessage(admin.chatId, answer, {
+              parse_mode: "HTML",
+            });
+          } catch (error) {
+            console.error(
+              `Ошибка при отправке сообщения администратору с chat_id ${admin.chatId}`,
+              error
+            );
+          }
+        }
+      }
     }
 
     ctx.session.taskID = completion.taskId;

@@ -42,6 +42,11 @@ const {
   adminCategoryCompletionScene,
   adminCompletionDetailScene,
 } = require("./admin/admin.completions");
+const {
+  adminRequestScene,
+  adminCategoryRequestScene,
+  adminRequestDetailScene,
+} = require("./admin/admin.requests");
 
 // REG ACTIONS
 const stage = new Scenes.Stage();
@@ -84,5 +89,9 @@ stage.register(analyticScene);
 stage.register(adminCompletionScene);
 stage.register(adminCategoryCompletionScene);
 stage.register(adminCompletionDetailScene);
+// Requests actions
+stage.register(adminRequestScene);
+stage.register(adminCategoryRequestScene);
+stage.register(adminRequestDetailScene);
 
 module.exports = stage;
