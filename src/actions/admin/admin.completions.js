@@ -185,27 +185,22 @@ adminCompletionDetailScene.enter(async (ctx) => {
       ...eventButtons.reply_markup.inline_keyboard,
       ...backMenuButtons.reply_markup.inline_keyboard,
     ];
-    if (
-      completion.status === reply.status.onApproved ||
-      completion.status === reply.status.onDenied
-    ) {
+
+    // Check status
+    const status = completion.status;
+    const incorrectStatuses = [reply.status.onApproved, reply.status.onDenied];
+    if (incorrectStatuses.includes(status)) {
       keyboardButtons = [...backMenuButtons.reply_markup.inline_keyboard];
     }
-
-    let keyboard = {
+    if (completion.reportPhoto) {
+      ctx.session.completionPhotoPath = completion.reportPhoto;
+      keyboardButtons.unshift(...lookPhotoButton.reply_markup.inline_keyboard);
+    }
+    const keyboard = {
       reply_markup: {
         inline_keyboard: keyboardButtons,
       },
     };
-    if (completion.reportPhoto) {
-      ctx.session.completionPhotoPath = completion.reportPhoto;
-      keyboard = {
-        reply_markup: {
-          inline_keyboard: [...lookPhotoButton.reply_markup.inline_keyboard],
-          keyboardButtons,
-        },
-      };
-    }
 
     // Create message
     const message = await ctx.replyWithHTML(answer, keyboard);

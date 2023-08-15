@@ -6,7 +6,11 @@ const stage = require("./src/actions/actions.register");
 
 // Create
 let bot = new Telegraf(process.env.BOT_TOKEN);
-bot.use(session());
+bot.use(
+  session({
+    ttl: 60 * 60 * 24, // 24 hours
+  })
+);
 
 // Functions
 async function start() {

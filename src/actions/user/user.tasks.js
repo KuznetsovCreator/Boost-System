@@ -41,47 +41,43 @@ const taskCompletionAddPhotoScene = new Scenes.BaseScene(
 
 // Output task categories
 taskScene.enter(async (ctx) => {
-  // Create text
-  const title = "Какие задачи тебя интересуют? 🎯";
-  const description = "Выберите категорию задач из списка доступных.";
-  const answer = createHeader(title, description);
-
-  // Create UI
-  const button = createBtn(reply.button.back, "COMMON_START_ACTION");
-  const keyboard = {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: "Задачи отдела",
-            callback_data: "TASK_CATEGORY_DEPARTMENT",
-          },
-          {
-            text: "Общие задачи",
-            callback_data: "TASK_CATEGORY_ALL",
-          },
-        ],
-        ...button.reply_markup.inline_keyboard,
-      ],
-    },
-  };
-
-  // Create message
-  const message = await ctx.replyWithHTML(answer, keyboard);
-  ctx.session.sceneMessages = message.message_id;
-});
-taskScene.action(/TASK_CATEGORY_(.+)/, (ctx) => {
-  const callback = ctx.match[1];
-
-  const data = ["user.departmentId"];
+  const data = ["user"];
   if (handlerCheckData(ctx, data)) {
-    const categoryID = callback.trim();
-    if (categoryID === "DEPARTMENT") {
-      ctx.session.taskCategoryID = ctx.session.user.departmentId;
-    } else {
-      ctx.session.taskCategoryID = "common";
-    }
+    // Create text
+    const title = "Какие задачи тебя интересуют? 🎯";
+    const description = "Выберите категорию задач из списка доступных.";
+    const answer = createHeader(title, description);
 
+    // Create UI
+    const button = createBtn(reply.button.back, "COMMON_START_ACTION");
+    const keyboard = {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "Задачи моего отдела",
+              callback_data: "BUTTON_CATEGORY_DEPARTMENT",
+            },
+            {
+              text: "Общие задачи",
+              callback_data: "BUTTON_CATEGORY_NULL",
+            },
+          ],
+          ...button.reply_markup.inline_keyboard,
+        ],
+      },
+    };
+
+    // Create message
+    const message = await ctx.replyWithHTML(answer, keyboard);
+    ctx.session.sceneMessages = message.message_id;
+  }
+});
+taskScene.action(/BUTTON_CATEGORY_(.+)/, (ctx) => {
+  const callback = ctx.match[1].trim();
+  const data = ["user"];
+  if (handlerCheckData(ctx, data)) {
+    ctx.session.task_category_ID = callback;
     handlerGoToScene(
       ctx,
       "TASK_CATEGORY_ACTION",
@@ -93,13 +89,17 @@ taskScene.action(/TASK_CATEGORY_(.+)/, (ctx) => {
 
 // Output tasks from category
 taskCategoryScene.enter(async (ctx) => {
-  const data = ["taskCategoryID"];
+  const data = ["user", "task_category_ID"];
   if (handlerCheckData(ctx, data)) {
-    // Get prize category ID
-    let categoryID = ctx.session.taskCategoryID;
-    if (categoryID === "common") {
+    // Get and check data
+    let categoryID = ctx.session.task_category_ID;
+    if (categoryID === "DEPARTMENT") {
+      categoryID = ctx.session.user.departmentId;
+    } else {
       categoryID = null;
     }
+
+    // Get tasks
     const tasks = await getAllTasksByDepartmentId(categoryID);
 
     // Check prizes is empty
